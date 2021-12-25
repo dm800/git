@@ -153,3 +153,6 @@ if __name__ == '__main__':
         mainwind.render(screen)
         pygame.display.flip()
         clock.tick(50)
+
+
+print("КУ")
