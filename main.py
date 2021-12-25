@@ -155,3 +155,4 @@ if __name__ == '__main__':
         clock.tick(50)
 
 print("КУ")
+print("КУ всем КУ")
