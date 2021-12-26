@@ -33,7 +33,7 @@ class MyScreen:
         text = font.render("Это   е игра.", True, (255, 255, 255))
         screen.blit(text, (325, 370))
         all_sprites = pygame.sprite.Group()
-        nchsprite = Nch(all_sprites)
+        nchsprite = NLetter(all_sprites, 3)
         all_sprites.add(nchsprite)
         all_sprites.draw(screen)
         self.render_splash()
@@ -69,9 +69,9 @@ class MyScreen:
         screen.blit(text, (325, self.yposfirst))
         self.render_splash()
         all_sprites = pygame.sprite.Group()
-        nchsprite = Nch(all_sprites)
+        nchsprite = NLetter(all_sprites, 3)
         nchsprite.rect.y = self.yposch
-        nchsprite.image = pygame.transform.rotate(self.imagen, self.angle)
+        nchsprite.change_angle(self.angle)
         all_sprites.add(nchsprite)
         all_sprites.draw(screen)
 
@@ -110,16 +110,40 @@ class MyScreen:
         return k
 
 
-class Nch(pygame.sprite.Sprite):
-    def __init__(self, group):
+class Letter(pygame.sprite.Sprite):
+    def __init__(self, group, angle, filename, x, y):
         super().__init__(group)
-        self.image = pygame.transform.rotate(load_image("N.png"), 3)
+        self.origimage = filename
+        self.image = pygame.transform.rotate(load_image(filename), angle)
         self.rect = self.image.get_rect()
-        self.rect.x = 655
-        self.rect.y = 413
+        self.rect.x = x
+        self.rect.y = y
+        self.velocity = 1
+        self.angle = angle
+
+    def drop(self):
+        pass
+
+    def update(self):
+        self.drop()
+
+    def change_angle(self, angle):
+        self.angle = angle
+        self.image = pygame.transform.rotate(load_image(self.origimage), self.angle)
 
 
-def load_image(name, colorkey=(30, 30, 40)):
+class NLetter(Letter):
+    def __init__(self, group, angle):
+        super().__init__(group, angle, "N.png", 623, 390)
+
+    def drop(self):
+        pass
+
+    def update(self):
+        pass
+
+
+def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
@@ -153,6 +177,3 @@ if __name__ == '__main__':
         mainwind.render(screen)
         pygame.display.flip()
         clock.tick(50)
-
-print("КУ")
-print("КУ всем КУ")
