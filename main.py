@@ -13,6 +13,14 @@ class MyScreen:
         self.nchsprite = NLetter(self.n_sprites, 3)
         self.n_sprites.add(self.nchsprite)
         self.all_letters = pygame.sprite.Group()
+        self.bukvae_ea = Letter(self.all_letters, 0, "Э.png", 300, 370)
+        self.bukvae_t = Letter(self.all_letters, 0, "т.png", 375, 370)
+        self.bukvae_o = Letter(self.all_letters, 0, "о.png", 450, 370)
+        self.bukvae_e = Letter(self.all_letters, 0, "е.png", 725, 370)
+        self.bukvae_i = Letter(self.all_letters, 0, "и.png", 875, 370)
+        self.bukvae_g = Letter(self.all_letters, 0, "г.png", 950, 370)
+        self.bukvae_r = Letter(self.all_letters, 0, "р.png", 1025, 370)
+        self.bukvae_a = Letter(self.all_letters, 0, "а.png", 1100, 370)
         pass
 
     def render(self, screen):  # Основной блок отображения экрана
