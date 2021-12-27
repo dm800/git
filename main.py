@@ -13,14 +13,14 @@ class MyScreen:
         self.nchsprite = NLetter(self.n_sprites, 3)
         self.n_sprites.add(self.nchsprite)
         self.all_letters = pygame.sprite.Group()
-        self.bukvae_ea = Letter(self.all_letters, 0, "Э.png", 300, 370)
-        self.bukvae_t = Letter(self.all_letters, 0, "т.png", 375, 370)
-        self.bukvae_o = Letter(self.all_letters, 0, "о.png", 450, 370)
-        self.bukvae_e = Letter(self.all_letters, 0, "е.png", 725, 370)
-        self.bukvae_i = Letter(self.all_letters, 0, "и.png", 875, 370)
-        self.bukvae_g = Letter(self.all_letters, 0, "г.png", 950, 370)
-        self.bukvae_r = Letter(self.all_letters, 0, "р.png", 1025, 370)
-        self.bukvae_a = Letter(self.all_letters, 0, "а.png", 1100, 370)
+        self.bukvae_ea = Letter(self.all_letters, 0, "Э.png", 340, 390)
+        self.bukvae_t = Letter(self.all_letters, 0, "т.png", 415, 390)
+        self.bukvae_o = Letter(self.all_letters, 0, "о.png", 490, 390)
+        self.bukvae_e = Letter(self.all_letters, 0, "е.png", 765, 390)
+        self.bukvae_i = Letter(self.all_letters, 0, "и.png", 915, 390)
+        self.bukvae_g = Letter(self.all_letters, 0, "г.png", 990, 390)
+        self.bukvae_r = Letter(self.all_letters, 0, "р.png", 1065, 390)
+        self.bukvae_a = Letter(self.all_letters, 0, "а.png", 1140, 390)
         pass
 
     def render(self, screen):  # Основной блок отображения экрана
@@ -30,12 +30,12 @@ class MyScreen:
             self.render_first(screen)
         elif self.phase == "second":
             self.render_second(screen)
+        elif self.phase == "third":
+            self.render_third(screen)
 
     def render_start(self, screen):
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 310), (1300, 310), (1300, 590), (300, 590)), 7)
-        font = pygame.font.Font(None, 230)
-        text = font.render("Это   е игра.", True, (255, 255, 255))
-        screen.blit(text, (325, 370))
+        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+        self.all_letters.draw(screen)
         self.n_sprites.draw(screen)
         self.render_splash()
 
@@ -44,14 +44,13 @@ class MyScreen:
         self.angle += 3.35
         if self.angle > 90:
             self.angle = 90
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 310), (1300, 310), (1300, 590), (300, 590)), 7)
-        font = pygame.font.Font(None, 230)
-        text = font.render("Это   е игра.", True, (255, 255, 255))
-        screen.blit(text, (325, 370))
+        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+        self.all_letters.draw(screen)
         self.render_splash()
         self.nchsprite.change_angle(self.angle)
         self.n_sprites.draw(screen)
         if k[0] is True:
+            create_particles((740, 850))
             self.phase = "second"
 
     def render_second(self, screen):
@@ -59,16 +58,24 @@ class MyScreen:
         self.render_splash()
         self.all_letters.update()
         self.all_letters.draw(screen)
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 310), (1300, 310), (1300, 590), (300, 590)), 7)
-        # Тут уже код вызывается падение остальных буковок, но их пока нет :(
-        #  self.all_leters.add(self.bukva1, self.bukva2...)
+        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+        if self.bukvae_a.rect.y >= 770:
+            create_particles((self.bukvae_a.rect.y, self.bukvae_a.rect.x))  # Не работает ни капли
+            self.phase = "third"
+
+    def render_third(self, screen):
+        self.n_sprites.draw(screen)
+        self.render_splash()
+        self.all_letters.update()
+        self.all_letters.draw(screen)
+        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
         splash = fontforsplash.render(self.splashtxt, True, (255, 255, 255))
         screen.blit(splash, (450, 5))
 
-    def get_click(self, mouse_pos):
+    def get_click(self):
         k = self.nchsprite.update(event)
         self.splashtxt = k[1]
         self.render_splash()
@@ -103,8 +110,6 @@ class Letter(pygame.sprite.Sprite):
         self.velocity += 1
         if self.rect.y > 770:
             self.rect.y = 770
-            return True
-        return None
 
     def update(self):
         self.drop()
@@ -116,8 +121,16 @@ class Letter(pygame.sprite.Sprite):
 
 class NLetter(Letter):
     def __init__(self, group, angle):
-        super().__init__(group, angle, "N.png", 623, 390)
+        super().__init__(group, angle, "N.png", 680, 388)
         self.clickcounter = 0
+
+    def drop(self):
+        self.rect.y += self.velocity
+        self.velocity += 1
+        if self.rect.y > 783:
+            self.rect.y = 783
+            return True
+        return None
 
     def update(self, *args):
         if self.clickcounter == 3:
@@ -129,6 +142,37 @@ class NLetter(Letter):
                 return self.clickcounter, "Всё сломал... Кто тебя вообще пригласил?!"
             return self.clickcounter, "              НИЧЕГО ТУТ НЕ ТРОГАЙ!"
         return self.clickcounter, "     Ты думаешь, тебе это что-то даст?"
+
+
+class Particle(pygame.sprite.Sprite):
+    # сгенерируем частицы разного размера
+    fire = [pygame.image.load("data/particles.png")]
+    for scale in (5, 10, 20):
+        fire.append(pygame.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, group, pos, dx, dy):
+        super().__init__(group)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        # у каждой частицы своя скорость — это вектор
+        self.velocity = [dx, dy]
+        # и свои координаты
+        self.rect.x, self.rect.y = pos
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = 1
+
+    def update(self):
+        # применяем гравитационный эффект:
+        # движение с ускорением под действием гравитации
+        self.velocity[1] += self.gravity
+        # перемещаем частицу
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        # убиваем, если частица ушла за экран
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
 
 
 def load_image(name, colorkey=None):
@@ -148,20 +192,34 @@ def load_image(name, colorkey=None):
     return image
 
 
+def create_particles(position):
+    # количество создаваемых частиц
+    particle_count = 40
+    # возможные скорости
+    numbers = range(-5, 6)
+    for _ in range(particle_count):
+        Particle(particle_sprites, position, random.choice(numbers), random.choice(numbers))
+    particle_sprites.draw(screen)
+
+
 if __name__ == '__main__':
     pygame.init()
     size = width, height = 1600, 900
+    screen_rect = (0, 0, width, height)
     screen = pygame.display.set_mode(size)
     mainwind = MyScreen()
     running = True
     clock = pygame.time.Clock()
+    particle_sprites = pygame.sprite.Group()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mainwind.get_click(event.pos)
+                mainwind.get_click()
         screen.fill((30, 30, 40))
         mainwind.render(screen)
+        particle_sprites.update()
+        particle_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(50)
