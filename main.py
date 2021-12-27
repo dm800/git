@@ -17,6 +17,9 @@ class MyScreen:
         self.velocitych = 1
         self.nflag = False
         self.firstdrop = False
+        self.n_sprites = pygame.sprite.Group()
+        self.nchsprite = NLetter(self.n_sprites, 3)
+        self.n_sprites.add(self.nchsprite)
         pass
 
     def render(self, screen):  # Основной блок отображения экрана
@@ -32,10 +35,7 @@ class MyScreen:
         font = pygame.font.Font(None, 230)
         text = font.render("Это   е игра.", True, (255, 255, 255))
         screen.blit(text, (325, 370))
-        all_sprites = pygame.sprite.Group()
-        nchsprite = NLetter(all_sprites, 3)
-        all_sprites.add(nchsprite)
-        all_sprites.draw(screen)
+        self.n_sprites.draw(screen)
         self.render_splash()
 
     def render_first(self, screen):
@@ -68,12 +68,9 @@ class MyScreen:
         text = font.render("Это   е игра.", True, (255, 255, 255))
         screen.blit(text, (325, self.yposfirst))
         self.render_splash()
-        all_sprites = pygame.sprite.Group()
-        nchsprite = NLetter(all_sprites, 3)
-        nchsprite.rect.y = self.yposch
-        nchsprite.change_angle(self.angle)
-        all_sprites.add(nchsprite)
-        all_sprites.draw(screen)
+        self.nchsprite.rect.y = self.yposch
+        self.nchsprite.change_angle(self.angle)
+        self.n_sprites.draw(screen)
 
     def render_second(self, screen):
         self.render_first(screen)
@@ -84,19 +81,11 @@ class MyScreen:
         screen.blit(splash, (450, 5))
 
     def get_click(self, mouse_pos):
-        if self.phase == "start" and 650 < mouse_pos[0] < 738 and 411 < mouse_pos[1] < 497 and self.firstcounter == 2:
-            self.splashtxt = "Всё сломал... Кто тебя вообще пригласил?!"
-            self.render_splash()
+        k = self.nchsprite.update(event)
+        self.splashtxt = k[1]
+        self.render_splash()
+        if k[0] == 3:
             self.phase = "first"
-            self.render(screen)
-        elif self.phase == "start" and 650 < mouse_pos[0] < 738 and 411 < mouse_pos[1] < 497:
-            self.splashtxt = "              НИЧЕГО ТУТ НЕ ТРОГАЙ!"
-            self.firstcounter += 1
-            self.render_splash()
-        elif self.phase == "start":
-            self.splashtxt = "     Ты думаешь, тебе это что-то даст?"
-            self.render_splash()
-        pass
 
     def get_text(self):
         texts = ["            И зачем ты сюда пришёл?",
@@ -135,12 +124,18 @@ class Letter(pygame.sprite.Sprite):
 class NLetter(Letter):
     def __init__(self, group, angle):
         super().__init__(group, angle, "N.png", 623, 390)
+        self.clickcounter = 0
 
-    def drop(self):
-        pass
-
-    def update(self):
-        pass
+    def update(self, *args):
+        if self.clickcounter == 3:
+            return self.drop()
+        if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos):
+            self.clickcounter += 1
+            if self.clickcounter == 3:
+                return self.clickcounter, "Всё сломал... Кто тебя вообще пригласил?!"
+            return self.clickcounter, "              НИЧЕГО ТУТ НЕ ТРОГАЙ!"
+        return self.clickcounter, "     Ты думаешь, тебе это что-то даст?"
 
 
 def load_image(name, colorkey=None):
