@@ -84,8 +84,8 @@ class MyScreen:
         trashbin = pygame.sprite.Sprite()    # Создание мусорки, лишь её спрайт
         trashbin.image = load_image("trashbin.png")
         trashbin.rect = trashbin.image.get_rect()
-        trashbin.rect.x = 1470
-        trashbin.rect.y = 790
+        trashbin.rect.x = 1380
+        trashbin.rect.y = 650
         trashbin_group = pygame.sprite.Group()
         trashbin_group.add(trashbin)
         trashbin_group.draw(screen)
