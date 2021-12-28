@@ -69,6 +69,16 @@ class MyScreen:
         self.all_letters.update()
         self.all_letters.draw(screen)
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+        self.splashtxt = "    Прибери за собой и уходи отсюда..."
+        self.render_splash()
+        trashbin = pygame.sprite.Sprite()    # Создание мусорки, лишь её спрайт
+        trashbin.image = load_image("trashbin.png")
+        trashbin.rect = trashbin.image.get_rect()
+        trashbin.rect.x = 1470
+        trashbin.rect.y = 790
+        trashbin_group = pygame.sprite.Group()
+        trashbin_group.add(trashbin)
+        trashbin_group.draw(screen)
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
@@ -92,6 +102,9 @@ class MyScreen:
                  "                        Текст сверху"]
         k = random.choice(texts)
         return k
+
+    def get_phase(self):
+        return self.phase
 
 
 class Letter(pygame.sprite.Sprite):
@@ -161,7 +174,7 @@ class Particle(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = pos
 
         # гравитация будет одинаковой (значение константы)
-        self.gravity = 1
+        self.gravity = 0.5
 
     def update(self):
         # применяем гравитационный эффект:
@@ -216,7 +229,8 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mainwind.get_click()
+                if mainwind.get_phase() == "start":
+                    mainwind.get_click()
         screen.fill((30, 30, 40))
         mainwind.render(screen)
         particle_sprites.update()
