@@ -62,6 +62,7 @@ class MyScreen:
         if self.bukvae_a.rect.y >= 770:
             create_particles((self.bukvae_a.rect.y, self.bukvae_a.rect.x))  # Не работает ни капли
             self.phase = "third"
+            self.all_letters.add(self.nchsprite)
 
     def render_third(self, screen):
         self.n_sprites.draw(screen)
@@ -71,6 +72,15 @@ class MyScreen:
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
         self.splashtxt = "    Прибери за собой и уходи отсюда..."
         self.render_splash()
+        self.bukvae_a.canbemoved = True
+        self.bukvae_ea.canbemoved = True
+        self.bukvae_g.canbemoved = True
+        self.bukvae_t.canbemoved = True
+        self.bukvae_o.canbemoved = True
+        self.nchsprite.canbemoved = True
+        self.bukvae_e.canbemoved = True
+        self.bukvae_i.canbemoved = True
+        self.bukvae_r.canbemoved = True
         trashbin = pygame.sprite.Sprite()    # Создание мусорки, лишь её спрайт
         trashbin.image = load_image("trashbin.png")
         trashbin.rect = trashbin.image.get_rect()
@@ -117,15 +127,29 @@ class Letter(pygame.sprite.Sprite):
         self.rect.y = y
         self.velocity = 1
         self.angle = angle
+        self.canbemoved = False
 
     def drop(self):
         self.rect.y += self.velocity
         self.velocity += 1
         if self.rect.y > 770:
             self.rect.y = 770
+            self.velocity = 1
 
-    def update(self):
-        self.drop()
+    def move(self):
+        if self.rect.collidepoint(pygame.mouse.get_pos()) and \
+                pygame.mouse.get_pressed(num_buttons=3)[0] is True:
+            self.rect.y = pygame.mouse.get_pos()[1] - 60
+            self.rect.x = pygame.mouse.get_pos()[0] - 60
+            self.velocity = 1
+        else:
+            self.drop()
+
+    def update(self, *args):
+        if self.canbemoved is False:
+            self.drop()
+        else:
+            self.move()
 
     def change_angle(self, angle):
         self.angle = angle
@@ -146,15 +170,18 @@ class NLetter(Letter):
         return None
 
     def update(self, *args):
-        if self.clickcounter == 3:
-            return self.drop(), "Всё сломал... Кто тебя вообще пригласил?!"
-        if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
-                self.rect.collidepoint(args[0].pos):
-            self.clickcounter += 1
+        if self.canbemoved is False:
             if self.clickcounter == 3:
-                return self.clickcounter, "Всё сломал... Кто тебя вообще пригласил?!"
-            return self.clickcounter, "              НИЧЕГО ТУТ НЕ ТРОГАЙ!"
-        return self.clickcounter, "     Ты думаешь, тебе это что-то даст?"
+                return self.drop(), "Всё сломал... Кто тебя вообще пригласил?!"
+            if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                    self.rect.collidepoint(args[0].pos):
+                self.clickcounter += 1
+                if self.clickcounter == 3:
+                    return self.clickcounter, "Всё сломал... Кто тебя вообще пригласил?!"
+                return self.clickcounter, "              НИЧЕГО ТУТ НЕ ТРОГАЙ!"
+            return self.clickcounter, "     Ты думаешь, тебе это что-то даст?"
+        else:
+            self.move()
 
 
 class Particle(pygame.sprite.Sprite):
