@@ -32,6 +32,8 @@ class MyScreen:
             self.render_second(screen)
         elif self.phase == "third":
             self.render_third(screen)
+        elif self.phase == "fourth":
+            self.render_fourth(screen)
 
     def render_start(self, screen):
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
@@ -72,15 +74,11 @@ class MyScreen:
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
         self.splashtxt = "    Прибери за собой и уходи отсюда..."
         self.render_splash()
-        self.bukvae_a.canbemoved = True
-        self.bukvae_ea.canbemoved = True
-        self.bukvae_g.canbemoved = True
-        self.bukvae_t.canbemoved = True
-        self.bukvae_o.canbemoved = True
-        self.nchsprite.canbemoved = True
-        self.bukvae_e.canbemoved = True
-        self.bukvae_i.canbemoved = True
-        self.bukvae_r.canbemoved = True
+        sp = []
+        sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
+                   self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
+        for elem in sp:
+            elem.canbemoved = True
         trashbin = pygame.sprite.Sprite()    # Создание мусорки, лишь её спрайт
         trashbin.image = load_image("trashbin.png")
         trashbin.rect = trashbin.image.get_rect()
@@ -89,6 +87,16 @@ class MyScreen:
         trashbin_group = pygame.sprite.Group()
         trashbin_group.add(trashbin)
         trashbin_group.draw(screen)
+        c = 0
+        for elem in sp:
+            if elem.rect.collidepoint(1500, 770):
+                elem.kill()
+                c += 1
+        if c == 9:
+            self.phase = "fourth"
+
+    def render_fourth(self, screen):
+        pass
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
