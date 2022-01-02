@@ -96,7 +96,10 @@ class MyScreen:
             self.phase = "fourth"
 
     def render_fourth(self, screen):
-        pass
+        self.splashtxt = "                 Рамку тогда тоже убери"
+        self.render_splash()
+        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+        self.render_splash()
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
