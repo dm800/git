@@ -7,7 +7,9 @@ import sys
 class MyScreen:
     def __init__(self):
         self.splashtxt = self.get_text()  # Рандомный сплеш в начале
-        self.phase = "start"  # Отвечает за текущий момент прохождения игры, меняется по ходу игры
+        self.phase = "start"
+
+        # self.phase = "start"  # Отвечает за текущий момент прохождения игры, меняется по ходу игры
         self.angle = 3
         self.n_sprites = pygame.sprite.Group()
         self.nchsprite = NLetter(self.n_sprites, 3)
@@ -23,7 +25,14 @@ class MyScreen:
         self.bukvae_a = Letter(self.all_letters, 0, "а.png", 1140, 390)
 
         self.trashbin_group = pygame.sprite.Group()
-        self.trashbin = Trashcan(self.trashbin_group, "trashbin.png", 1380, 650)
+        self.trashbin = DroppingObject(self.trashbin_group, "trashbin.png", 1380, 650)
+
+        self.planks = pygame.sprite.Group()
+        self.plank = DroppingObject(self.planks, "plank.png", 650, 400)
+        self.plank.change_angle(350)
+
+        self.button_group = pygame.sprite.Group()
+        self.button = ButtonStart(self.button_group, 680, 395)
 
     def render(self, screen):  # Основной блок отображения экрана
         if self.phase == "start":
@@ -114,8 +123,10 @@ class MyScreen:
         self.render_splash()
         self.trashbin_group.update()
         self.trashbin_group.draw(screen)
+        self.button_group.update(event)
+        self.button_group.draw(screen)
+        self.planks.draw(screen)
         pass
-
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
@@ -144,9 +155,48 @@ class MyScreen:
         return self.phase
 
 
-class Letter(pygame.sprite.Sprite):
-    def __init__(self, group, angle, filename, x, y):
+class DroppingObject(pygame.sprite.Sprite):
+    def __init__(self, group, filename, x, y):
         super().__init__(group)
+        self.origimage = filename
+        self.image = load_image(filename)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.velocity = 1
+        self.canbemoved = False
+        self.angle = 0
+
+    def drop(self):
+        self.rect.y += self.velocity
+        self.velocity += 1
+        if self.rect.y > 650:
+            self.rect.y = 650
+            self.velocity = 1
+
+    def move(self):
+        if self.rect.collidepoint(pygame.mouse.get_pos()) and \
+                pygame.mouse.get_pressed(num_buttons=3)[0] is True:
+            self.rect.y = pygame.mouse.get_pos()[1] - 120
+            self.rect.x = pygame.mouse.get_pos()[0] - 120
+            self.velocity = 1
+        else:
+            self.drop()
+
+    def update(self, *args):
+        if self.canbemoved is True:
+            self.move()
+        else:
+            self.drop()
+
+    def change_angle(self, angle):
+        self.angle = angle
+        self.image = pygame.transform.rotate(load_image(self.origimage), self.angle)
+
+
+class Letter(DroppingObject):
+    def __init__(self, group, angle, filename, x, y):
+        super().__init__(group, filename, x, y)
         self.origimage = filename
         self.image = pygame.transform.rotate(load_image(filename), angle)
         self.rect = self.image.get_rect()
@@ -178,10 +228,6 @@ class Letter(pygame.sprite.Sprite):
         else:
             self.move()
 
-    def change_angle(self, angle):
-        self.angle = angle
-        self.image = pygame.transform.rotate(load_image(self.origimage), self.angle)
-
 
 class NLetter(Letter):
     def __init__(self, group, angle):
@@ -209,6 +255,24 @@ class NLetter(Letter):
             return self.clickcounter, "     Ты думаешь, тебе это что-то даст?"
         else:
             self.move()
+
+
+class ButtonStart(pygame.sprite.Sprite):
+    def __init__(self, group, x, y):
+        super().__init__(group)
+        self.image = load_image("start.png")
+        self.rect = self.image.get_rect()
+        self.notpressed = self.image
+        self.pressed = load_image("pressed.png")
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, *args):
+        if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos):
+            self.image = self.pressed
+        else:
+            self.image = self.notpressed
 
 
 class Particle(pygame.sprite.Sprite):
@@ -240,40 +304,6 @@ class Particle(pygame.sprite.Sprite):
         # убиваем, если частица ушла за экран
         if not self.rect.colliderect(screen_rect):
             self.kill()
-
-
-class Trashcan(pygame.sprite.Sprite):
-    def __init__(self, group, filename, x, y):
-        super().__init__(group)
-        self.origimage = filename
-        self.image = load_image(filename)
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.velocity = 1
-        self.canbemoved = False
-
-    def drop(self):
-        self.rect.y += self.velocity
-        self.velocity += 1
-        if self.rect.y > 650:
-            self.rect.y = 650
-            self.velocity = 1
-
-    def move(self):
-        if self.rect.collidepoint(pygame.mouse.get_pos()) and \
-                pygame.mouse.get_pressed(num_buttons=3)[0] is True:
-            self.rect.y = pygame.mouse.get_pos()[1] - 120
-            self.rect.x = pygame.mouse.get_pos()[0] - 120
-            self.velocity = 1
-        else:
-            self.drop()
-
-    def update(self, *args):
-        if self.canbemoved is True:
-            self.move()
-        else:
-            self.drop()
 
 
 def load_image(name, colorkey=None):
