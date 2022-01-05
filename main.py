@@ -25,11 +25,17 @@ class MyScreen:
         self.bukvae_a = Letter(self.all_letters, 0, "а.png", 1140, 390)
 
         self.trashbin_group = pygame.sprite.Group()
-        self.trashbin = DroppingObject(self.trashbin_group, "trashbin.png", 1380, 650)
+        self.trashbin = DroppingObject(self.trashbin_group, "trashbin.png", 1380, 650, 650)
 
         self.planks = pygame.sprite.Group()
-        self.plank = DroppingObject(self.planks, "plank.png", 650, 400)
+        self.plank = DroppingObject(self.planks, "board_new.png", 500, 350, 650)
         self.plank.change_angle(350)
+        self.saw_group = pygame.sprite.Group()
+        self.saw = DroppingObject(self.saw_group, "saw.png", -40, 650, 850)
+        self.saw.image = pygame.transform.flip(self.saw.image, True, False)
+        self.saw.canbemoved = True
+        self.saw.otkl = 15
+        self.scale = 1
 
         self.button_group = pygame.sprite.Group()
         self.button = ButtonStart(self.button_group, 680, 395)
@@ -47,6 +53,12 @@ class MyScreen:
             self.render_fourth(screen)
         elif self.phase == "fifth":
             self.render_fifth(screen)
+        elif self.phase == "sixth":
+            self.render_sixth(screen)
+        elif self.phase == "seventh":
+            self.render_seventh(screen)
+        elif self.phase == "eighth":
+            self.render_eighth(screen)
 
     def render_start(self, screen):
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
@@ -114,31 +126,77 @@ class MyScreen:
         self.trashbin_group.update()
         self.trashbin_group.draw(screen)
         if self.trashbin.rect.colliderect(300, 335, 900, 235):
+            self.splashtxt = "      Ты меня не понял?! УХОДИ!"
             self.phase = "fifth"
             self.render(screen)
             self.trashbin.canbemoved = False
 
     def render_fifth(self, screen):
-        self.splashtxt = "      Ты меня не понял?! УХОДИ!"
         self.render_splash()
         self.trashbin_group.update()
         self.trashbin_group.draw(screen)
         self.button_group.update(event)
         self.button_group.draw(screen)
         self.planks.draw(screen)
-        pass
+        self.saw_group.update()
+        self.saw_group.draw(screen)
+        if self.saw.rect.colliderect(500, 350, 770, 380):
+            self.splashtxt = "          Чёт пила у тебя маловата :)"
+            self.phase = "sixth"
+
+    def render_sixth(self, screen):
+        self.render_splash()
+        self.trashbin_group.update()
+        self.trashbin_group.draw(screen)
+        self.button_group.update(event)
+        self.button_group.draw(screen)
+        self.planks.draw(screen)
+        self.saw_group.update()
+        self.saw_group.draw(screen)
+        if self.saw.rect.collidepoint(pygame.mouse.get_pos()) and \
+                pygame.mouse.get_pressed(num_buttons=3)[0] and \
+                pygame.mouse.get_pressed(num_buttons=3)[2]:
+            self.saw.image = pygame.transform.scale(self.saw.image, (150 * self.scale, 64 * self.scale))
+            self.scale += 0.05
+            self.saw.otkl += 2
+            self.saw.floor *= 0.995
+        if self.scale >= 2:
+            self.phase = "seventh"
+            self.splashtxt = "ЭЭЭЭЭ, ОСТАНОВИСЬ ПОКА НЕ ПОЗДНО"
+            self.button.canbeclicked = True
+
+    def render_seventh(self, screen):
+        self.render_splash()
+        self.trashbin_group.update()
+        self.trashbin_group.draw(screen)
+        k = self.button.update(event)
+        self.button_group.draw(screen)
+        self.saw_group.update()
+        self.saw_group.draw(screen)
+        if k is True:
+            self.phase = "eighth"
+            self.splashtxt = "        Что ты вообще наделал!"
+            self.button.canbeclicked = False
+            self.button.update(event)
+
+    def render_eighth(self, screen):
+        self.render_splash()
+        self.trashbin_group.update()
+        self.trashbin_group.draw(screen)
+        self.button_group.draw(screen)
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
         splash = fontforsplash.render(self.splashtxt, True, (255, 255, 255))
         screen.blit(splash, (450, 5))
 
-    def get_click(self):
-        k = self.nchsprite.update(event)
-        self.splashtxt = k[1]
-        self.render_splash()
-        if k[0] == 3:
-            self.phase = "first"
+    def get_click(self, event):
+        if self.phase == "start":
+            k = self.nchsprite.update(event)
+            self.splashtxt = k[1]
+            self.render_splash()
+            if k[0] == 3:
+                self.phase = "first"
 
     def get_text(self):
         texts = ["            И зачем ты сюда пришёл?",
@@ -156,7 +214,7 @@ class MyScreen:
 
 
 class DroppingObject(pygame.sprite.Sprite):
-    def __init__(self, group, filename, x, y):
+    def __init__(self, group, filename, x, y, floor):
         super().__init__(group)
         self.origimage = filename
         self.image = load_image(filename)
@@ -166,19 +224,21 @@ class DroppingObject(pygame.sprite.Sprite):
         self.velocity = 1
         self.canbemoved = False
         self.angle = 0
+        self.floor = floor
+        self.otkl = 120
 
     def drop(self):
         self.rect.y += self.velocity
         self.velocity += 1
-        if self.rect.y > 650:
-            self.rect.y = 650
+        if self.rect.y > self.floor:
+            self.rect.y = self.floor
             self.velocity = 1
 
     def move(self):
         if self.rect.collidepoint(pygame.mouse.get_pos()) and \
                 pygame.mouse.get_pressed(num_buttons=3)[0] is True:
-            self.rect.y = pygame.mouse.get_pos()[1] - 120
-            self.rect.x = pygame.mouse.get_pos()[0] - 120
+            self.rect.y = pygame.mouse.get_pos()[1] - self.otkl
+            self.rect.x = pygame.mouse.get_pos()[0] - self.otkl
             self.velocity = 1
         else:
             self.drop()
@@ -196,7 +256,7 @@ class DroppingObject(pygame.sprite.Sprite):
 
 class Letter(DroppingObject):
     def __init__(self, group, angle, filename, x, y):
-        super().__init__(group, filename, x, y)
+        super().__init__(group, filename, x, y, 650)
         self.origimage = filename
         self.image = pygame.transform.rotate(load_image(filename), angle)
         self.rect = self.image.get_rect()
@@ -266,13 +326,16 @@ class ButtonStart(pygame.sprite.Sprite):
         self.pressed = load_image("pressed.png")
         self.rect.x = x
         self.rect.y = y
+        self.canbeclicked = False
 
     def update(self, *args):
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
-                self.rect.collidepoint(args[0].pos):
+                self.rect.collidepoint(args[0].pos) and self.canbeclicked:
             self.image = self.pressed
+            return True
         else:
             self.image = self.notpressed
+            return False
 
 
 class Particle(pygame.sprite.Sprite):
@@ -347,8 +410,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if mainwind.get_phase() == "start":
-                    mainwind.get_click()
+                mainwind.get_click(event)
         screen.fill((30, 30, 40))
         mainwind.render(screen)
         particle_sprites.update()
