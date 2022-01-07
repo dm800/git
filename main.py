@@ -59,6 +59,8 @@ class MyScreen:
             self.render_seventh(screen)
         elif self.phase == "eighth":
             self.render_eighth(screen)
+        elif self.phase == "ninth":
+            self.render_ninth(screen)
 
     def render_start(self, screen):
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
@@ -106,15 +108,14 @@ class MyScreen:
         self.render_splash()
         self.trashbin_group.update()
         self.trashbin_group.draw(screen)
-        c = 0
         sp = []
         sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
                    self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
         for elem in sp:
             if elem.rect.collidepoint(1500, 770):
                 elem.kill()
-                c += 1
-        if c == 9:
+                elem.iskilled = True
+        if all([elem.get_state()[0] for elem in sp]):
             self.trashbin.canbemoved = True
             self.phase = "fourth"
 
@@ -163,25 +164,67 @@ class MyScreen:
         if self.scale >= 2:
             self.phase = "seventh"
             self.splashtxt = "ЭЭЭЭЭ, ОСТАНОВИСЬ ПОКА НЕ ПОЗДНО"
-            self.button.canbeclicked = True
 
     def render_seventh(self, screen):
         self.render_splash()
         self.trashbin_group.update()
         self.trashbin_group.draw(screen)
-        k = self.button.update(event)
+        self.button.update(event)
         self.button_group.draw(screen)
         self.saw_group.update()
         self.saw_group.draw(screen)
-        if k is True:
-            self.phase = "eighth"
-            self.splashtxt = "        Что ты вообще наделал!"
-            self.button.canbeclicked = False
-            self.button.update(event)
+        self.planks.draw(screen)
+        if self.saw.rect.colliderect((500, 350, 1000, 500)) and not self.saw.get_state()[0]:
+            self.saw.kill()
+            self.saw.iskilled = True
+            self.plank.kill()
+            self.plank.iskilled = True
+            self.part1 = DroppingObject(self.planks, "board_part1_new.png", 500, 350, 700)
+            self.part1.change_angle(350)
+            self.part1.canbemoved = True
+            self.part2 = DroppingObject(self.planks, "board_part2_new.png", 750, 450, 700)
+            self.part2.change_angle(350)
+            self.part2.canbemoved = True
+            self.angle1 = 350
+            self.angle2 = 350
+        if self.saw.get_state()[0]:
+            self.planks.update()
+            binx = self.trashbin.rect.x
+            biny = self.trashbin.rect.y
+            if self.part1.rect.y < 700 and not self.part1.get_state()[1]:
+                self.angle1 -= 1
+                self.part1.change_angle(self.angle1)
+            if self.part2.rect.y < 700 and not self.part2.get_state()[1]:
+                self.part2.change_angle(self.angle2)
+                self.angle2 += 1
+            if self.angle1 <= -10 or self.angle2 >= 710:
+                self.splashtxt = "Хватит их уже крутить, верни всё на место!"
+            if self.part1.rect.colliderect(binx, biny, binx + 256, biny + 256):
+                self.part1.kill()
+                self.part1.iskilled = True
+            if self.part2.rect.colliderect(binx, biny, binx + 256, biny + 256):
+                self.part2.kill()
+                self.part2.iskilled = True
+            if self.part1.get_state()[0] and self.part2.get_state()[0]:
+                self.phase = "eighth"
+                self.splashtxt = "       ТОЛЬКО НИЧЕГО НЕ ЖМИ!"
+                self.button.canbeclicked = True
+                self.button.update(event)
 
     def render_eighth(self, screen):
         self.render_splash()
         self.trashbin_group.update()
+        self.trashbin_group.draw(screen)
+        k = self.button.update(event)
+        self.button_group.draw(screen)
+        if k is True:
+            self.phase = "ninth"
+            self.splashtxt = "Вставьте текст"
+            self.button.canbeclicked = False
+            self.button.update(event)
+
+    def render_ninth(self, screen):
+        self.render_splash()
         self.trashbin_group.draw(screen)
         self.button_group.draw(screen)
 
@@ -226,6 +269,8 @@ class DroppingObject(pygame.sprite.Sprite):
         self.angle = 0
         self.floor = floor
         self.otkl = 120
+        self.iskilled = False
+        self.ispicked = False
 
     def drop(self):
         self.rect.y += self.velocity
@@ -240,7 +285,9 @@ class DroppingObject(pygame.sprite.Sprite):
             self.rect.y = pygame.mouse.get_pos()[1] - self.otkl
             self.rect.x = pygame.mouse.get_pos()[0] - self.otkl
             self.velocity = 1
+            self.ispicked = True
         else:
+            self.ispicked = False
             self.drop()
 
     def update(self, *args):
@@ -252,6 +299,9 @@ class DroppingObject(pygame.sprite.Sprite):
     def change_angle(self, angle):
         self.angle = angle
         self.image = pygame.transform.rotate(load_image(self.origimage), self.angle)
+
+    def get_state(self):
+        return self.iskilled, self.ispicked
 
 
 class Letter(DroppingObject):
