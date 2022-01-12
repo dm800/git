@@ -89,7 +89,15 @@ class MyScreen:
         self.all_letters.draw(screen)
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
         if self.bukvae_a.rect.y >= 770:
-            create_particles((self.bukvae_a.rect.y, self.bukvae_a.rect.x))  # Не работает ни капли
+            create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_ea.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_t.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_o.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_i.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_g.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_r.rect.x + 50, self.bukvae_a.rect.y + 50))
+            create_particles((self.bukvae_a.rect.x + 50, self.bukvae_a.rect.y + 50))
             self.phase = "third"
             self.all_letters.add(self.nchsprite)
             sp = []
@@ -455,6 +463,9 @@ if __name__ == '__main__':
     running = True
     clock = pygame.time.Clock()
     particle_sprites = pygame.sprite.Group()
+    s = pygame.mixer.Sound("sounds/Background.mp3")
+    s.set_volume(0.2)
+    ch = s.play(-1)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
