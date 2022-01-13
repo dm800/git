@@ -40,6 +40,10 @@ class MyScreen:
         self.button_group = pygame.sprite.Group()
         self.button = ButtonStart(self.button_group, 680, 395)
 
+        self.pausegroup = pygame.sprite.Group()
+        self.pausebutton = PauseButton(self.pausegroup, 1500, 0)
+        self.paused = False
+
     def render(self, screen):  # Основной блок отображения экрана
         if self.phase == "start":
             self.render_start(screen)
@@ -61,193 +65,294 @@ class MyScreen:
             self.render_eighth(screen)
         elif self.phase == "ninth":
             self.render_ninth(screen)
+        elif self.phase == "tenth":
+            self.render_tenth(screen)
 
     def render_start(self, screen):
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
         self.all_letters.draw(screen)
         self.n_sprites.draw(screen)
         self.render_splash()
+        self.pausegroup.update()
+        self.pausegroup.draw(screen)
 
     def render_first(self, screen):
-        k = self.nchsprite.update()
-        self.angle += 3.35
-        if self.angle > 90:
-            self.angle = 90
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
-        self.all_letters.draw(screen)
-        self.render_splash()
-        self.nchsprite.change_angle(self.angle)
-        self.n_sprites.draw(screen)
-        if k[0] is True:
-            create_particles((740, 850))
-            self.phase = "second"
+        if self.paused is False:
+            k = self.nchsprite.update()
+            self.angle += 3.35
+            if self.angle > 90:
+                self.angle = 90
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            self.all_letters.draw(screen)
+            self.render_splash()
+            self.nchsprite.change_angle(self.angle)
+            self.n_sprites.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if k[0] is True:
+                create_particles((740, 850))
+                self.phase = "second"
+        else:
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            self.all_letters.draw(screen)
+            self.n_sprites.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            self.render_splash()
 
     def render_second(self, screen):
-        self.n_sprites.draw(screen)
-        self.render_splash()
-        self.all_letters.update()
-        self.all_letters.draw(screen)
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
-        if self.bukvae_a.rect.y >= 770:
-            create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_ea.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_t.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_o.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_i.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_g.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_r.rect.x + 50, self.bukvae_a.rect.y + 50))
-            create_particles((self.bukvae_a.rect.x + 50, self.bukvae_a.rect.y + 50))
-            self.phase = "third"
-            self.all_letters.add(self.nchsprite)
+        if self.paused is False:
+            self.n_sprites.draw(screen)
+            self.render_splash()
+            self.all_letters.update()
+            self.all_letters.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            if self.bukvae_a.rect.y >= 770:
+                create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_ea.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_t.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_o.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_i.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_g.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_r.rect.x + 50, self.bukvae_a.rect.y + 50))
+                create_particles((self.bukvae_a.rect.x + 50, self.bukvae_a.rect.y + 50))
+                self.phase = "third"
+                self.all_letters.add(self.nchsprite)
+                sp = []
+                sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
+                           self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
+                for elem in sp:
+                    elem.canbemoved = True
+        else:
+            self.all_letters.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            self.n_sprites.draw(screen)
+            self.render_splash()
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+
+    def render_third(self, screen):
+        if self.paused is False:
+            self.n_sprites.draw(screen)
+            self.render_splash()
+            self.all_letters.update()
+            self.all_letters.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            self.splashtxt = "    Прибери за собой и уходи отсюда..."
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
             sp = []
             sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
                        self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
             for elem in sp:
-                elem.canbemoved = True
-
-    def render_third(self, screen):
-        self.n_sprites.draw(screen)
-        self.render_splash()
-        self.all_letters.update()
-        self.all_letters.draw(screen)
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
-        self.splashtxt = "    Прибери за собой и уходи отсюда..."
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        sp = []
-        sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
-                   self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
-        for elem in sp:
-            if elem.rect.collidepoint(1500, 770):
-                elem.kill()
-                elem.iskilled = True
-        if all([elem.get_state()[0] for elem in sp]):
-            self.trashbin.canbemoved = True
-            self.phase = "fourth"
+                if elem.rect.collidepoint(1500, 770):
+                    elem.kill()
+                    elem.iskilled = True
+            if all([elem.get_state()[0] for elem in sp]):
+                self.trashbin.canbemoved = True
+                self.phase = "fourth"
+        else:
+            self.n_sprites.draw(screen)
+            self.all_letters.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            self.render_splash()
+            self.trashbin_group.draw(screen)
 
     def render_fourth(self, screen):
-        self.splashtxt = "                      А теперь уходи"
-        self.render_splash()
-        pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        if self.trashbin.rect.colliderect(300, 335, 900, 235):
-            self.splashtxt = "      Ты меня не понял?! УХОДИ!"
-            self.phase = "fifth"
-            self.render(screen)
-            self.trashbin.canbemoved = False
+        if self.paused is False:
+            self.splashtxt = "                      А теперь уходи"
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if self.trashbin.rect.colliderect(300, 335, 900, 235):
+                self.splashtxt = "      Ты меня не понял?! УХОДИ!"
+                self.phase = "fifth"
+                self.render(screen)
+                self.trashbin.canbemoved = False
+        else:
+            self.render_splash()
+            self.trashbin_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
 
     def render_fifth(self, screen):
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        self.button_group.update(event)
-        self.button_group.draw(screen)
-        self.planks.draw(screen)
-        self.saw_group.update()
-        self.saw_group.draw(screen)
-        if self.saw.rect.colliderect(500, 350, 770, 380):
-            self.splashtxt = "          Чёт пила у тебя маловата :)"
-            self.phase = "sixth"
+        if self.paused is False:
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
+            self.button_group.update(event)
+            self.button_group.draw(screen)
+            self.planks.draw(screen)
+            self.saw_group.update()
+            self.saw_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if self.saw.rect.colliderect(500, 350, 770, 380):
+                self.splashtxt = "          Чёт пила у тебя маловата :)"
+                self.phase = "sixth"
+        else:
+            self.render_splash()
+            self.trashbin_group.draw(screen)
+            self.button_group.draw(screen)
+            self.planks.draw(screen)
+            self.saw_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
 
     def render_sixth(self, screen):
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        self.button_group.update(event)
-        self.button_group.draw(screen)
-        self.planks.draw(screen)
-        self.saw_group.update()
-        self.saw_group.draw(screen)
-        if self.saw.rect.collidepoint(pygame.mouse.get_pos()) and \
-                pygame.mouse.get_pressed(num_buttons=3)[0] and \
-                pygame.mouse.get_pressed(num_buttons=3)[2]:
-            self.saw.image = pygame.transform.scale(self.saw.image, (150 * self.scale, 64 * self.scale))
-            self.scale += 0.05
-            self.saw.otkl += 2
-            self.saw.floor *= 0.995
-        if self.scale >= 2:
-            self.phase = "seventh"
-            self.splashtxt = "ЭЭЭЭЭ, ОСТАНОВИСЬ ПОКА НЕ ПОЗДНО"
+        if self.paused is False:
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
+            self.button_group.update(event)
+            self.button_group.draw(screen)
+            self.planks.draw(screen)
+            self.saw_group.update()
+            self.saw_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if self.saw.rect.collidepoint(pygame.mouse.get_pos()) and \
+                    pygame.mouse.get_pressed(num_buttons=3)[0] and \
+                    pygame.mouse.get_pressed(num_buttons=3)[2]:
+                self.saw.image = pygame.transform.scale(self.saw.image, (150 * self.scale, 64 * self.scale))
+                self.scale += 0.05
+                self.saw.otkl += 2
+                self.saw.floor *= 0.995
+            if self.scale >= 2:
+                self.phase = "seventh"
+                self.splashtxt = "ЭЭЭЭЭ, ОСТАНОВИСЬ ПОКА НЕ ПОЗДНО"
+        else:
+            self.render_splash()
+            self.trashbin_group.draw(screen)
+            self.button_group.draw(screen)
+            self.planks.draw(screen)
+            self.saw_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
 
     def render_seventh(self, screen):
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        self.button.update(event)
-        self.button_group.draw(screen)
-        self.saw_group.update()
-        self.saw_group.draw(screen)
-        self.planks.draw(screen)
-        if self.saw.rect.colliderect((500, 350, 1000, 500)) and not self.saw.get_state()[0]:
-            self.saw.kill()
-            self.saw.iskilled = True
-            self.plank.kill()
-            self.plank.iskilled = True
-            self.part1 = DroppingObject(self.planks, "board_part1_new.png", 500, 350, 700)
-            self.part1.change_angle(350)
-            self.part1.canbemoved = True
-            self.part2 = DroppingObject(self.planks, "board_part2_new.png", 750, 450, 700)
-            self.part2.change_angle(350)
-            self.part2.canbemoved = True
-            self.angle1 = 350
-            self.angle2 = 350
-        if self.saw.get_state()[0]:
-            self.planks.update()
-            binx = self.trashbin.rect.x
-            biny = self.trashbin.rect.y
-            if self.part1.rect.y < 700 and not self.part1.get_state()[1]:
-                self.angle1 -= 1
-                self.part1.change_angle(self.angle1)
-            if self.part2.rect.y < 700 and not self.part2.get_state()[1]:
-                self.part2.change_angle(self.angle2)
-                self.angle2 += 1
-            if self.angle1 <= -10 or self.angle2 >= 710:
-                self.splashtxt = "Хватит их уже крутить, верни всё на место!"
-            if self.part1.rect.colliderect(binx, biny, binx + 256, biny + 256):
-                self.part1.kill()
-                self.part1.iskilled = True
-            if self.part2.rect.colliderect(binx, biny, binx + 256, biny + 256):
-                self.part2.kill()
-                self.part2.iskilled = True
-            if self.part1.get_state()[0] and self.part2.get_state()[0]:
-                self.phase = "eighth"
-                self.splashtxt = "       ТОЛЬКО НИЧЕГО НЕ ЖМИ!"
-                self.button.canbeclicked = True
-                self.button.update(event)
+        if self.paused is False:
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
+            self.button.update(event)
+            self.button_group.draw(screen)
+            self.saw_group.update()
+            self.saw_group.draw(screen)
+            self.planks.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if self.saw.rect.colliderect((500, 350, 1000, 500)) and not self.saw.get_state()[0]:
+                self.saw.kill()
+                self.saw.iskilled = True
+                self.plank.kill()
+                self.plank.iskilled = True
+                self.part1 = DroppingObject(self.planks, "board_part1_new.png", 500, 350, 700)
+                self.part1.change_angle(350)
+                self.part1.canbemoved = True
+                self.part2 = DroppingObject(self.planks, "board_part2_new.png", 750, 450, 700)
+                self.part2.change_angle(350)
+                self.part2.canbemoved = True
+                self.angle1 = 350
+                self.angle2 = 350
+            if self.saw.get_state()[0]:
+                self.planks.update()
+                binx = self.trashbin.rect.x
+                biny = self.trashbin.rect.y
+                if self.part1.rect.y < 700 and not self.part1.get_state()[1]:
+                    self.angle1 -= 1
+                    self.part1.change_angle(self.angle1)
+                if self.part2.rect.y < 700 and not self.part2.get_state()[1]:
+                    self.part2.change_angle(self.angle2)
+                    self.angle2 += 1
+                if self.angle1 <= -10 or self.angle2 >= 710:
+                    self.splashtxt = "Хватит их уже крутить, верни всё на место!"
+                if self.part1.rect.colliderect(binx, biny, binx + 256, biny + 256):
+                    self.part1.kill()
+                    self.part1.iskilled = True
+                if self.part2.rect.colliderect(binx, biny, binx + 256, biny + 256):
+                    self.part2.kill()
+                    self.part2.iskilled = True
+                if self.part1.get_state()[0] and self.part2.get_state()[0]:
+                    self.phase = "eighth"
+                    self.splashtxt = "       ТОЛЬКО НИЧЕГО НЕ ЖМИ!"
+                    self.button.canbeclicked = True
+                    self.button.update(event)
+        else:
+            self.render_splash()
+            self.trashbin_group.draw(screen)
+            self.button_group.draw(screen)
+            self.saw_group.draw(screen)
+            self.planks.draw(screen)
+            self.pausegroup.draw(screen)
 
     def render_eighth(self, screen):
-        self.render_splash()
-        self.trashbin_group.update()
-        self.trashbin_group.draw(screen)
-        k = self.button.update(event)
-        self.button_group.draw(screen)
-        if k is True:
-            self.phase = "ninth"
-            self.splashtxt = "Вставьте текст"
-            self.button.canbeclicked = False
-            self.button.update(event)
+        if self.paused is False:
+            self.render_splash()
+            self.trashbin_group.update()
+            self.trashbin_group.draw(screen)
+            k = self.button.update(event)
+            self.button_group.draw(screen)
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if k is True:
+                self.phase = "ninth"
+                self.splashtxt = "Ну, тогда попробуй нажми на неё :)"
+                self.button.update(event)
+        else:
+            self.render_splash()
+            self.trashbin_group.draw(screen)
+            self.button_group.draw(screen)
+            self.pausegroup.draw(screen)
 
     def render_ninth(self, screen):
         self.render_splash()
-        self.trashbin_group.draw(screen)
         self.button_group.draw(screen)
+        k = self.button.update(event, paused=self.paused)
+        self.pausegroup.draw(screen)
+        self.pausegroup.update()
+        if k is None:
+            self.splashtxt = "          НУ И ПОЛУЧАЙ СВОЮ ИГРУ!"
+            self.phase = "tenth"
+            self.render_splash()
+
+    def render_tenth(self, screen):
+        self.render_splash()
+        pass
 
     def render_splash(self):
         fontforsplash = pygame.font.Font(None, 50)
         splash = fontforsplash.render(self.splashtxt, True, (255, 255, 255))
         screen.blit(splash, (450, 5))
 
-    def get_click(self, event):
+    def get_click(self, event, screen):
         if self.phase == "start":
             k = self.nchsprite.update(event)
             self.splashtxt = k[1]
             self.render_splash()
             if k[0] == 3:
                 self.phase = "first"
+        if self.pausebutton.rect.collidepoint(pygame.mouse.get_pos()):
+            self.change_pause()
+            self.pausebutton.change_state()
+            self.pausegroup.update()
+            self.pausegroup.draw(screen)
+            if self.paused is True:
+                ch.pause()
+            else:
+                ch.unpause()
 
     def get_text(self):
         texts = ["            И зачем ты сюда пришёл?",
@@ -262,6 +367,10 @@ class MyScreen:
 
     def get_phase(self):
         return self.phase
+
+    def change_pause(self):
+        self.paused = True if self.paused is False else False
+        return self.paused
 
 
 class DroppingObject(pygame.sprite.Sprite):
@@ -386,14 +495,43 @@ class ButtonStart(pygame.sprite.Sprite):
         self.rect.y = y
         self.canbeclicked = False
 
-    def update(self, *args):
+    def update(self, *args, paused=False):
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
-                self.rect.collidepoint(args[0].pos) and self.canbeclicked:
+                self.rect.collidepoint(args[0].pos) and self.canbeclicked and not paused:
             self.image = self.pressed
+            self.rect.x = random.randrange(100, 1300)
+            self.rect.y = random.randrange(100, 700)
             return True
+        elif args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos) and self.canbeclicked and paused:
+            return
         else:
             self.image = self.notpressed
             return False
+
+
+class PauseButton(pygame.sprite.Sprite):
+    def __init__(self, group, x, y):
+        super().__init__(group)
+        self.image = load_image("pause button.png")
+        self.rect = self.image.get_rect()
+        self.notpressed = self.image
+        self.pressed = load_image("resume button.png")
+        self.rect.x = x
+        self.rect.y = y
+        self.state = False
+
+    def update(self):
+        if self.state is True:
+            self.image = self.pressed
+        else:
+            self.image = self.notpressed
+
+    def change_state(self):
+        if self.state is False:
+            self.state = True
+        else:
+            self.state = False
 
 
 class Particle(pygame.sprite.Sprite):
@@ -471,7 +609,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mainwind.get_click(event)
+                mainwind.get_click(event, screen)
         screen.fill((30, 30, 40))
         mainwind.render(screen)
         particle_sprites.update()
