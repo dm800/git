@@ -7,9 +7,8 @@ import sys
 class MyScreen:
     def __init__(self):
         self.splashtxt = self.get_text()  # Рандомный сплеш в начале
-        self.phase = "start"
+        self.phase = "start"  # Отвечает за текущий момент прохождения игры, меняется по ходу игры
 
-        # self.phase = "start"  # Отвечает за текущий момент прохождения игры, меняется по ходу игры
         self.angle = 3
         self.n_sprites = pygame.sprite.Group()
         self.nchsprite = NLetter(self.n_sprites, 3)
@@ -67,6 +66,7 @@ class MyScreen:
             self.render_ninth(screen)
         elif self.phase == "tenth":
             self.render_tenth(screen)
+        # Здесь начинаются блоки рендера, по факту - смена уровней
 
     def render_start(self, screen):
         pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
@@ -80,7 +80,7 @@ class MyScreen:
         if self.paused is False:
             k = self.nchsprite.update()
             self.angle += 3.35
-            if self.angle > 90:
+            if self.angle > 90:   # Система вращения буквы
                 self.angle = 90
             pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
             self.all_letters.draw(screen)
@@ -110,6 +110,7 @@ class MyScreen:
             self.pausegroup.draw(screen)
             pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
             if self.bukvae_a.rect.y >= 770:
+                # Создание партиклов под каждую букву
                 create_particles((self.bukvae_e.rect.x + 50, self.bukvae_a.rect.y + 50))
                 create_particles((self.bukvae_ea.rect.x + 50, self.bukvae_a.rect.y + 50))
                 create_particles((self.bukvae_t.rect.x + 50, self.bukvae_a.rect.y + 50))
@@ -147,6 +148,7 @@ class MyScreen:
             self.render_splash()
             self.trashbin_group.update()
             self.trashbin_group.draw(screen)
+            # Проверка, выброшены ли все буквы
             sp = []
             sp.extend([self.bukvae_a, self.bukvae_e, self.bukvae_ea, self.bukvae_g,
                        self.bukvae_i, self.bukvae_o, self.bukvae_r, self.bukvae_t, self.nchsprite])
@@ -226,6 +228,7 @@ class MyScreen:
             if self.saw.rect.collidepoint(pygame.mouse.get_pos()) and \
                     pygame.mouse.get_pressed(num_buttons=3)[0] and \
                     pygame.mouse.get_pressed(num_buttons=3)[2]:
+                # Медленное увеличение пилы, при двух зажатых кнопках мыши
                 self.saw.image = pygame.transform.scale(self.saw.image, (150 * self.scale, 64 * self.scale))
                 self.scale += 0.05
                 self.saw.otkl += 2
@@ -255,6 +258,7 @@ class MyScreen:
             self.pausegroup.update()
             self.pausegroup.draw(screen)
             if self.saw.rect.colliderect((500, 350, 1000, 500)) and not self.saw.get_state()[0]:
+                # Блок кода, объявляющий куски распиленной доски в случае касания с пилой
                 self.saw.kill()
                 self.saw.iskilled = True
                 self.plank.kill()
@@ -271,6 +275,7 @@ class MyScreen:
                 self.planks.update()
                 binx = self.trashbin.rect.x
                 biny = self.trashbin.rect.y
+                # Система вращений и перехода на следующий уровень
                 if self.part1.rect.y < 700 and not self.part1.get_state()[1]:
                     self.angle1 -= 1
                     self.part1.change_angle(self.angle1)
@@ -278,6 +283,7 @@ class MyScreen:
                     self.part2.change_angle(self.angle2)
                     self.angle2 += 1
                 if self.angle1 <= -10 or self.angle2 >= 710:
+                    # В случае, если игрок просто стал их вращать
                     self.splashtxt = "Хватит их уже крутить, верни всё на место!"
                 if self.part1.rect.colliderect(binx, biny, binx + 256, biny + 256):
                     self.part1.kill()
@@ -303,7 +309,7 @@ class MyScreen:
             self.render_splash()
             self.trashbin_group.update()
             self.trashbin_group.draw(screen)
-            k = self.button.update(event)
+            k = self.button.update(event)  # True если нажата кнопка.
             self.button_group.draw(screen)
             self.pausegroup.update()
             self.pausegroup.draw(screen)
@@ -321,6 +327,7 @@ class MyScreen:
         self.render_splash()
         self.button_group.draw(screen)
         k = self.button.update(event, paused=self.paused)
+        # Доп параметр даёт нажать её во время паузы, вернёт None если всё сделано правильно
         self.pausegroup.draw(screen)
         self.pausegroup.update()
         if k is None:
@@ -328,23 +335,23 @@ class MyScreen:
             self.phase = "tenth"
             self.render_splash()
 
-    def render_tenth(self, screen):
+    def render_tenth(self, screen):  # Итоговая игра, конец всей игры.
         self.render_splash()
         pass
 
-    def render_splash(self):
+    def render_splash(self):   # Метод отрисовки 'слов' игры
         fontforsplash = pygame.font.Font(None, 50)
         splash = fontforsplash.render(self.splashtxt, True, (255, 255, 255))
         screen.blit(splash, (450, 5))
 
     def get_click(self, event, screen):
-        if self.phase == "start":
+        if self.phase == "start" and self.paused is not True:  # Обработка нажатия на букву "Н" в начале игры
             k = self.nchsprite.update(event)
             self.splashtxt = k[1]
             self.render_splash()
             if k[0] == 3:
                 self.phase = "first"
-        if self.pausebutton.rect.collidepoint(pygame.mouse.get_pos()):
+        if self.pausebutton.rect.collidepoint(pygame.mouse.get_pos()):    # Обработка нажатия на кнопку паузы
             self.change_pause()
             self.pausebutton.change_state()
             self.pausegroup.update()
@@ -354,7 +361,7 @@ class MyScreen:
             else:
                 ch.unpause()
 
-    def get_text(self):
+    def get_text(self):  # Рандомный сплеш начала
         texts = ["            И зачем ты сюда пришёл?",
                  "              Ну тут реально нет игры",
                  "Лучше бы разработчика поддержали...",
@@ -389,14 +396,14 @@ class DroppingObject(pygame.sprite.Sprite):
         self.iskilled = False
         self.ispicked = False
 
-    def drop(self):
+    def drop(self):  # Падение объекта
         self.rect.y += self.velocity
         self.velocity += 1
         if self.rect.y > self.floor:
             self.rect.y = self.floor
             self.velocity = 1
 
-    def move(self):
+    def move(self):  # Движение объекта (следует за курсором)
         if self.rect.collidepoint(pygame.mouse.get_pos()) and \
                 pygame.mouse.get_pressed(num_buttons=3)[0] is True:
             self.rect.y = pygame.mouse.get_pos()[1] - self.otkl
@@ -413,7 +420,7 @@ class DroppingObject(pygame.sprite.Sprite):
         else:
             self.drop()
 
-    def change_angle(self, angle):
+    def change_angle(self, angle):  # Наклонение картинки объекта
         self.angle = angle
         self.image = pygame.transform.rotate(load_image(self.origimage), self.angle)
 
@@ -469,7 +476,7 @@ class NLetter(Letter):
             return True
         return None
 
-    def update(self, *args):
+    def update(self, *args):  # Используется изменения метода update, для простоты использования в основной части
         if self.canbemoved is False:
             if self.clickcounter == 3:
                 return self.drop(), "Всё сломал... Кто тебя вообще пригласил?!"
@@ -498,14 +505,17 @@ class ButtonStart(pygame.sprite.Sprite):
     def update(self, *args, paused=False):
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos) and self.canbeclicked and not paused:
+            # Телепортация буквы, если нет паузы
             self.image = self.pressed
             self.rect.x = random.randrange(100, 1300)
             self.rect.y = random.randrange(100, 700)
             return True
         elif args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos) and self.canbeclicked and paused:
+            # Возврат None, в случае паузы
             return
         else:
+            # Если нет нажатия, вернуть False
             self.image = self.notpressed
             return False
 
@@ -601,7 +611,7 @@ if __name__ == '__main__':
     running = True
     clock = pygame.time.Clock()
     particle_sprites = pygame.sprite.Group()
-    s = pygame.mixer.Sound("sounds/Background.mp3")
+    s = pygame.mixer.Sound("sounds/Background.mp3")   # Музыка заднего фона
     s.set_volume(0.2)
     ch = s.play(-1)
     while running:
