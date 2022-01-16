@@ -43,6 +43,8 @@ class MyScreen:
         self.pausebutton = PauseButton(self.pausegroup, 1500, 0)
         self.paused = False
 
+        self.gridgroup = pygame.sprite.Group()
+
     def render(self, screen):  # Основной блок отображения экрана
         if self.phase == "start":
             self.render_start(screen)
@@ -80,7 +82,7 @@ class MyScreen:
         if self.paused is False:
             k = self.nchsprite.update()
             self.angle += 3.35
-            if self.angle > 90:   # Система вращения буквы
+            if self.angle > 90:  # Система вращения буквы
                 self.angle = 90
             pygame.draw.polygon(screen, (255, 255, 255), ((300, 335), (1300, 335), (1300, 570), (300, 570)), 7)
             self.all_letters.draw(screen)
@@ -334,12 +336,63 @@ class MyScreen:
             self.splashtxt = "          НУ И ПОЛУЧАЙ СВОЮ ИГРУ!"
             self.phase = "tenth"
             self.render_splash()
+            self.lastchallenge = FullGrid()
+            self.lastchallenge.make_grid()
+            self.lastchallenge.delete_numbers(50)
+            self.lastchallenge.print_grid()
+            self.current = -1
+            ch.unpause()
 
-    def render_tenth(self, screen):  # Итоговая игра, конец всей игры.
+    def render_tenth(self, screen):  # Итоговая игра, конец всей игры
         self.render_splash()
-        pass
+        kt = self.lastchallenge.get_grid()
+        i = 0
+        for elem in kt:
+            itog = elem
+            if self.current != -1:
+                keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,
+                        pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]   # Цифры на клавиатуре
+                index = 0
+                for key in keys:  # Проверка, зажата ли одна из них и смена, если да
+                    index += 1
+                    if pygame.key.get_pressed()[key] is True:
+                        itog = index
+                        self.lastchallenge.change_number(self.current, index)
+                        self.current = -1
+                        break
+            f = Digit(self.gridgroup, itog, i)  # Создание цифры
+            if f.rect.collidepoint(pygame.mouse.get_pos()) and \
+                    event.type == pygame.MOUSEBUTTONDOWN and elem == 0:
+                self.current = i
+                print(i)
+            # Отрисовка белого квадрата вокруг всех цифр
+            pygame.draw.polygon(screen, (190, 190, 190), ((i % 9 * 80 + 420, i // 9 * 80 + 80),
+                                                          (i % 9 * 80 + 420, i // 9 * 80 + 160),
+                                                          (i % 9 * 80 + 500, i // 9 * 80 + 160),
+                                                          (i % 9 * 80 + 500, i // 9 * 80 + 80)), 3)
+            i += 1
+        if self.current != -1:  # Отрисовка зелёного квадрата вокруг выбранной цифры
+            pygame.draw.polygon(screen, (0, 180, 0), ((self.current % 9 * 80 + 420, self.current // 9 * 80 + 80),
+                                                      (self.current % 9 * 80 + 420, self.current // 9 * 80 + 160),
+                                                      (self.current % 9 * 80 + 500, self.current // 9 * 80 + 160),
+                                                      (self.current % 9 * 80 + 500, self.current // 9 * 80 + 80)), 3)
+        self.gridgroup.draw(screen)
+        self.gridgroup.empty()
+        if self.lastchallenge.get_grid() == self.lastchallenge.get_orig():
+            self.splashtxt = " ВСЁ! ТЫ ПОБЕДИЛ! ДОБИЛСЯ СВОЕГО?"
+            self.phase = "last"
+        elif 0 not in self.lastchallenge.get_grid():
+            self.splashtxt = "     Ты даже с этим не справился..."
+            self.lastchallenge = FullGrid()
+            self.lastchallenge.make_grid()
+            self.lastchallenge.delete_numbers(50)
+            self.lastchallenge.print_grid()
+            self.current = -1
 
-    def render_splash(self):   # Метод отрисовки 'слов' игры
+    def render_last(self, screen):
+        print("конец")
+
+    def render_splash(self):  # Метод отрисовки 'слов' игры
         fontforsplash = pygame.font.Font(None, 50)
         splash = fontforsplash.render(self.splashtxt, True, (255, 255, 255))
         screen.blit(splash, (450, 5))
@@ -351,7 +404,8 @@ class MyScreen:
             self.render_splash()
             if k[0] == 3:
                 self.phase = "first"
-        if self.pausebutton.rect.collidepoint(pygame.mouse.get_pos()):    # Обработка нажатия на кнопку паузы
+        if self.pausebutton.rect.collidepoint(pygame.mouse.get_pos()) and \
+                self.phase != "tenth":  # Обработка нажатия на кнопку паузы
             self.change_pause()
             self.pausebutton.change_state()
             self.pausegroup.update()
@@ -491,6 +545,22 @@ class NLetter(Letter):
             self.move()
 
 
+class Digit(pygame.sprite.Sprite):
+    def __init__(self, group, num, id):
+        super().__init__(group)
+        self.num = num
+        self.sp = [load_image("space.png"), load_image("num1.png"),
+                   load_image("num2.png"), load_image("num3.png"),
+                   load_image("num4.png"), load_image("num5.png"),
+                   load_image("num6.png"), load_image("num7.png"),
+                   load_image("num8.png"), load_image("num9.png")]
+        self.image = self.sp[num]
+        self.id = id
+        self.rect = self.image.get_rect()
+        self.rect.x = id % 9 * 80 + 420
+        self.rect.y = id // 9 * 80 + 80
+
+
 class ButtonStart(pygame.sprite.Sprite):
     def __init__(self, group, x, y):
         super().__init__(group)
@@ -602,6 +672,66 @@ def create_particles(position):
     particle_sprites.draw(screen)
 
 
+class FullGrid:  # Класс сетки для судоку без GUI
+    def __init__(self):
+        self.grid = [0] * 81
+        self.squarepos = [0, 3, 6, 27, 30, 33, 54, 57, 60]
+        self.all_nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.current = self.grid.copy()
+
+    def make_grid(self):
+        id = -1
+        while 0 in self.grid:
+            id += 1
+            now = (id, self.grid[id])
+            squares = {}
+            count = 0
+            for elem in self.squarepos:
+                count += 1
+                tempsquare = [(elem, self.grid[elem]), (1 + elem, self.grid[elem + 1]),
+                              (2 + elem, self.grid[elem + 2]), (9 + elem, self.grid[elem + 9]),
+                              (10 + elem, self.grid[elem + 10]), (11 + elem, self.grid[elem + 11]),
+                              (18 + elem, self.grid[elem + 18]), (19 + elem, self.grid[elem + 19]),
+                              (20 + elem, self.grid[elem + 20])]
+                squares[count] = tempsquare
+            row = id // 9
+            column = id % 9
+            banned_nums = []
+            banned_nums.extend(self.grid[i] for i in range(row * 9, (row + 1) * 9))
+            banned_nums.extend(self.grid[i] for i in range(column, column + 73, 9))
+            for key in squares:
+                if now in squares[key]:
+                    banned_nums.extend(self.grid[elem[0]] for elem in squares[key])
+                    break
+            banned_nums = set(banned_nums)
+            allowed_nums = set(self.all_nums) - banned_nums
+            if len(allowed_nums) == 0:
+                for i in range(9):
+                    self.grid[id - i] = 0
+                id -= 9
+                continue
+            self.grid[id] = random.choice(list(allowed_nums))
+        self.current = self.grid.copy()
+
+    def get_grid(self):
+        return self.current
+
+    def get_orig(self):
+        return self.grid
+
+    def delete_numbers(self, num):
+        k = random.sample([elem for elem in range(81)], k=num)
+        for elem in k:
+            self.current[elem] = 0
+
+    def print_grid(self):
+        for i in range(9):
+            print(*self.current[i * 9:(i + 1) * 9])
+
+    def change_number(self, id, num):
+        self.current[id] = num
+
+
 if __name__ == '__main__':
     pygame.init()
     size = width, height = 1600, 900
@@ -611,7 +741,7 @@ if __name__ == '__main__':
     running = True
     clock = pygame.time.Clock()
     particle_sprites = pygame.sprite.Group()
-    s = pygame.mixer.Sound("sounds/Background.mp3")   # Музыка заднего фона
+    s = pygame.mixer.Sound("sounds/Background.mp3")  # Музыка заднего фона
     s.set_volume(0.2)
     ch = s.play(-1)
     while running:
