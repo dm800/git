@@ -45,6 +45,8 @@ class MyScreen:
 
         self.gridgroup = pygame.sprite.Group()
 
+        self.result = False
+
     def render(self, screen):  # Основной блок отображения экрана
         if self.phase == "start":
             self.render_start(screen)
@@ -340,7 +342,7 @@ class MyScreen:
             self.render_splash()
             self.lastchallenge = FullGrid()
             self.lastchallenge.make_grid()
-            self.lastchallenge.delete_numbers(50)
+            self.lastchallenge.delete_numbers(1)
             self.current = -1
             ch.unpause()
 
@@ -352,7 +354,7 @@ class MyScreen:
             itog = elem
             if self.current != -1:
                 keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,
-                        pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]   # Цифры на клавиатуре
+                        pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]  # Цифры на клавиатуре
                 index = 0
                 for key in keys:  # Проверка, зажата ли одна из них и смена, если да
                     index += 1
@@ -390,10 +392,19 @@ class MyScreen:
             self.lastchallenge.print_grid()
             self.current = -1
 
-    def render_last(self, screen):   # Последний текст
+    def render_last(self, screen):  # Последний текст
         fontforlast = pygame.font.Font(None, 200)
         splash = fontforlast.render("Уходи.", True, (255, 255, 255))
         screen.blit(splash, (100, 300))
+        fontforresult = pygame.font.Font(None, 100)
+        k = str((1000000 - pygame.time.get_ticks() + st) // 1000)
+        if self.result is False:
+            self.splash2 = fontforresult.render(" ".join(["Поздравляю! Твои очки:", k]), True,
+                                                (255, 255, 255))
+            self.result = True
+        screen.blit(self.splash2, (100, 500))
+        with open("Results.txt", mode="w", encoding="utf8") as f:
+            print("Очки:", k, file=f)
         if (pygame.time.get_ticks() - self.start_ticks) / 1000 > 10:
             # Подсчёт времени (прошло 10 секунд - окно закрылось)
             global running
@@ -751,6 +762,7 @@ if __name__ == '__main__':
     s = pygame.mixer.Sound("sounds/Background.mp3")  # Музыка заднего фона
     s.set_volume(0.2)
     ch = s.play(-1)
+    st = pygame.time.get_ticks()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
