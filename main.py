@@ -68,6 +68,8 @@ class MyScreen:
             self.render_ninth(screen)
         elif self.phase == "tenth":
             self.render_tenth(screen)
+        elif self.phase == "last":
+            self.render_last(screen)
         # Здесь начинаются блоки рендера, по факту - смена уровней
 
     def render_start(self, screen):
@@ -339,7 +341,6 @@ class MyScreen:
             self.lastchallenge = FullGrid()
             self.lastchallenge.make_grid()
             self.lastchallenge.delete_numbers(50)
-            self.lastchallenge.print_grid()
             self.current = -1
             ch.unpause()
 
@@ -364,7 +365,6 @@ class MyScreen:
             if f.rect.collidepoint(pygame.mouse.get_pos()) and \
                     event.type == pygame.MOUSEBUTTONDOWN and elem == 0:
                 self.current = i
-                print(i)
             # Отрисовка белого квадрата вокруг всех цифр
             pygame.draw.polygon(screen, (190, 190, 190), ((i % 9 * 80 + 420, i // 9 * 80 + 80),
                                                           (i % 9 * 80 + 420, i // 9 * 80 + 160),
@@ -381,6 +381,7 @@ class MyScreen:
         if self.lastchallenge.get_grid() == self.lastchallenge.get_orig():
             self.splashtxt = " ВСЁ! ТЫ ПОБЕДИЛ! ДОБИЛСЯ СВОЕГО?"
             self.phase = "last"
+            self.start_ticks = pygame.time.get_ticks()
         elif 0 not in self.lastchallenge.get_grid():
             self.splashtxt = "     Ты даже с этим не справился..."
             self.lastchallenge = FullGrid()
@@ -389,8 +390,14 @@ class MyScreen:
             self.lastchallenge.print_grid()
             self.current = -1
 
-    def render_last(self, screen):
-        print("конец")
+    def render_last(self, screen):   # Последний текст
+        fontforlast = pygame.font.Font(None, 200)
+        splash = fontforlast.render("Уходи.", True, (255, 255, 255))
+        screen.blit(splash, (100, 300))
+        if (pygame.time.get_ticks() - self.start_ticks) / 1000 > 10:
+            # Подсчёт времени (прошло 10 секунд - окно закрылось)
+            global running
+            running = False
 
     def render_splash(self):  # Метод отрисовки 'слов' игры
         fontforsplash = pygame.font.Font(None, 50)
