@@ -342,7 +342,7 @@ class MyScreen:
             self.render_splash()
             self.lastchallenge = FullGrid()
             self.lastchallenge.make_grid()
-            self.lastchallenge.delete_numbers(1)
+            self.lastchallenge.delete_numbers(50)
             self.current = -1
             ch.unpause()
 
@@ -351,7 +351,6 @@ class MyScreen:
         kt = self.lastchallenge.get_grid()
         i = 0
         for elem in kt:
-            itog = elem
             if self.current != -1:
                 keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,
                         pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]  # Цифры на клавиатуре
@@ -359,11 +358,10 @@ class MyScreen:
                 for key in keys:  # Проверка, зажата ли одна из них и смена, если да
                     index += 1
                     if pygame.key.get_pressed()[key] is True:
-                        itog = index
                         self.lastchallenge.change_number(self.current, index)
                         self.current = -1
                         break
-            f = Digit(self.gridgroup, itog, i)  # Создание цифры
+            f = Digit(self.gridgroup, self.lastchallenge.get_grid()[i], i)  # Создание цифры
             if f.rect.collidepoint(pygame.mouse.get_pos()) and \
                     event.type == pygame.MOUSEBUTTONDOWN and elem == 0:
                 self.current = i
@@ -373,38 +371,28 @@ class MyScreen:
                                                           (i % 9 * 80 + 500, i // 9 * 80 + 160),
                                                           (i % 9 * 80 + 500, i // 9 * 80 + 80)), 3)
             i += 1
+        self.gridgroup.draw(screen)
+        self.gridgroup.empty()
         if self.current != -1:  # Отрисовка зелёного квадрата вокруг выбранной цифры
             pygame.draw.polygon(screen, (0, 180, 0), ((self.current % 9 * 80 + 420, self.current // 9 * 80 + 80),
                                                       (self.current % 9 * 80 + 420, self.current // 9 * 80 + 160),
                                                       (self.current % 9 * 80 + 500, self.current // 9 * 80 + 160),
                                                       (self.current % 9 * 80 + 500, self.current // 9 * 80 + 80)), 3)
-        self.gridgroup.draw(screen)
-        self.gridgroup.empty()
         if self.lastchallenge.get_grid() == self.lastchallenge.get_orig():
             self.splashtxt = " ВСЁ! ТЫ ПОБЕДИЛ! ДОБИЛСЯ СВОЕГО?"
             self.phase = "last"
             self.start_ticks = pygame.time.get_ticks()
-        elif 0 not in self.lastchallenge.get_grid():
+        elif not self.lastchallenge.checkifcorrect():
             self.splashtxt = "     Ты даже с этим не справился..."
             self.lastchallenge = FullGrid()
             self.lastchallenge.make_grid()
             self.lastchallenge.delete_numbers(50)
-            self.lastchallenge.print_grid()
             self.current = -1
 
     def render_last(self, screen):  # Последний текст
         fontforlast = pygame.font.Font(None, 200)
         splash = fontforlast.render("Уходи.", True, (255, 255, 255))
         screen.blit(splash, (100, 300))
-        fontforresult = pygame.font.Font(None, 100)
-        k = str((1000000 - pygame.time.get_ticks() + st) // 1000)
-        if self.result is False:
-            self.splash2 = fontforresult.render(" ".join(["Поздравляю! Твои очки:", k]), True,
-                                                (255, 255, 255))
-            self.result = True
-        screen.blit(self.splash2, (100, 500))
-        with open("Results.txt", mode="w", encoding="utf8") as f:
-            print("Очки:", k, file=f)
         if (pygame.time.get_ticks() - self.start_ticks) / 1000 > 10:
             # Подсчёт времени (прошло 10 секунд - окно закрылось)
             global running
@@ -741,6 +729,13 @@ class FullGrid:  # Класс сетки для судоку без GUI
         k = random.sample([elem for elem in range(81)], k=num)
         for elem in k:
             self.current[elem] = 0
+
+    def checkifcorrect(self):
+        for i in range(81):
+            if self.current[i] != self.grid[i]:
+                if self.current[i] != 0:
+                    return False
+        return True
 
     def print_grid(self):
         for i in range(9):
